@@ -27,6 +27,11 @@ except:
     pass
 
 def Trans_train(args, dataloader, model, opt):
+    """
+    Function for training the model with TransE, TransR, or SEEK algorithms.
+    Returns:
+        float
+    """
     model.train()
     kgdataset = dataloader
     kgloader = DataLoader(kgdataset,batch_size=2048, drop_last=True)
@@ -49,6 +54,11 @@ def Trans_train(args, dataloader, model, opt):
     return trans_loss.cpu().item()
 
 def train_single_phase(model, train_loader, valid_loader, args, logger, kg=None):
+    """
+    Train the model for a single phase.
+    Returns:
+        str/int
+    """
     optimizer = Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_dc_step, gamma=args.lr_dc)
 
@@ -152,6 +162,9 @@ def train_single_phase(model, train_loader, valid_loader, args, logger, kg=None)
                 return best_return
 
 def test(model, model_path, test_loader, args, logger, n_region):
+    """
+    Test the model using the provided test dataset.
+    """
     checkpoint = torch.load(model_path)
     model.load_state_dict(checkpoint['state_dict'])
     model = model.to(args.device)

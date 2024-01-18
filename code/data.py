@@ -21,6 +21,10 @@ except:
 from utils import *
 
 class KGDataset(Dataset):
+    """
+    A custom dataset class for handling knowledge graph (KG) data in machine learning models.
+    This class processes and stores knowledge graph data, including entities, relations, and triples.
+    """
     def __init__(self, args):
         kg_data = pd.read_csv(args.kg_path, sep='\t', names=['h', 'r', 't'], engine='python')
         self.kg_data = kg_data.drop_duplicates()
@@ -29,14 +33,29 @@ class KGDataset(Dataset):
 
     @property
     def entity_count(self):
+        """
+        Returns the total count of unique entities in the knowledge graph.
+        Returns:
+            int
+        """
         # start from one
         return self.kg_data['t'].max() + 2
 
     @property
     def relation_count(self):
+        """
+        Returns the total count of unique relations in the knowledge graph.
+        Returns:
+            int
+        """
         return self.kg_data['r'].max()+2
 
     def get_kg_dict(self, poi_num):
+        """
+        Generates a dictionary with POI-specific KG entity and relation information.
+        Returns:
+            dict
+        """
         entity_num = self.args.entity_num_per_poi # 2
         p2es = dict()
         p2rs = dict()
@@ -61,7 +80,12 @@ class KGDataset(Dataset):
 
 
     def generate_kg_data(self, kg_data):
-        # construct kg dict
+        """
+        Constructs a dictionary representation of the knowledge graph.
+        Returns:
+            dict
+            list
+        """
         kg_dict = collections.defaultdict(list)
         for row in kg_data.iterrows():
             h, r, t = row[1]
@@ -70,9 +94,19 @@ class KGDataset(Dataset):
         return kg_dict, heads
 
     def __len__(self):
+        """
+        Returns the total number of head entities in the knowledge graph.
+        Returns:
+            int
+        """
         return len(self.kg_dict)
 
     def __getitem__(self, index):
+        """
+        Retrieves a KG triple (head, relation, positive tail, negative tail) at a specified index.
+        Returns:
+            tuple
+        """
         head = self.heads[index]
         relation, pos_tail = random.choice(self.kg_dict[head])
         while True:
@@ -85,6 +119,11 @@ class KGDataset(Dataset):
         return head, relation, pos_tail, neg_tail
 
 class TravelDataset(Dataset):
+    """
+    A custom dataset class for handling travel-related data for machine learning models.
+    This class processes and stores data related to points of interest (POIs), regions,
+    user transactions, and associated features for use in models focusing on travel data.
+    """
     def __init__(self, args, ori_data_path, dst_data_path, trans_data_path):
         ori_raw = list(map(lambda x: x.strip().split('\t'), open(ori_data_path, 'r')))
         dst_raw = list(map(lambda x: x.strip().split('\t'), open(dst_data_path, 'r')))
@@ -172,6 +211,11 @@ class TravelDataset(Dataset):
 
         
     def __getitem__(self, index):
+        """
+        Retrieves an item at a specified index in the dataset.
+        Returns:
+            tuple
+        """
         uid = self.uids[index]
         o = self.oris[index]
         d = self.dsts[index]
@@ -184,10 +228,20 @@ class TravelDataset(Dataset):
         return uid, ori_ck, dst_ck, ori_rg, dst_rg
     
     def __len__(self):
+        """
+        Returns the total number of transactions (user movements) in the dataset.
+        Returns:
+            int
+        """
         return len(self.trans)
 
 
 def random_split(dataset, split_path, ratios=[0.8, 0.1, 0.1]):
+    """
+    Splits a dataset into training, validation, and testing subsets randomly.
+    Returns:
+        tuple
+    """
     trans = dataset.trans
     trans_by_pair = defaultdict(list)
     for u, t in enumerate(trans):
@@ -212,22 +266,5 @@ def random_split(dataset, split_path, ratios=[0.8, 0.1, 0.1]):
 
         with open('../Foursquare/data_split.pkl', 'wb') as file:
             pickle.dump([train_indice, valid_indice, test_indice], file)
-
-    # if os.path.exists("../Foursquare/poi_pop.pkl"):
-    #     print('pop exists!')
-    # else:
-    #     train_list = []
-    #     for i in train_indice:
-    #         train_list.append(dataset.oris[i])
-    #         train_list.append(dataset.dsts[i])
-    #     train_poi_list = [t[0] for sub_list in train_list for t in sub_list]
-    #     pop_dict = {}
-    #     for poi in train_poi_list:
-    #         if poi in pop_dict:
-    #             pop_dict[poi] += 1
-    #         else:
-    #             pop_dict[poi] = 1
-    #     with open("../Foursquare/poi_pop.pkl", "wb") as file:
-    #         pickle.dump(pop_dict, file)
 
     return Subset(dataset, train_indice), Subset(dataset, valid_indice), Subset(dataset, test_indice) # train_indices 是训练数据的索引列表

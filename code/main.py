@@ -42,7 +42,8 @@ def main():
     parser.add_argument("--kg_path", type=str, default="../Foursquare/kg.txt")
     parser.add_argument('--test_path', type=str)
     parser.add_argument('--data_split_path', type=str, default='../Foursquare/data_split.pkl')
-    # training configurations
+
+    # Training Configurations
     parser.add_argument('--mode', type=str, default='train')
     parser.add_argument('--train_batch', type=int, default=64)
     parser.add_argument('--save_step', type=int, default=1)
@@ -55,7 +56,7 @@ def main():
     parser.add_argument('--lr_dc', type=float, default=0.2)
     parser.add_argument('--lr_dc_step', type=int, default=4)
     parser.add_argument('--l2', type=float, default=1e-5)
-    parser.add_argument('--seed', type=int, default=9911)
+    parser.add_argument('--seed', type=int, default=9989)
     parser.add_argument('--log_path', type=str, default='./')
     parser.add_argument('--log', action="store_false")
     parser.add_argument('--name', type=str, default="default")
@@ -63,12 +64,12 @@ def main():
     parser.add_argument('--device', type=str, default="cuda:0")
     parser.add_argument("--stop_epoch", type=int, default=8) # early stopping
     parser.add_argument("--fine_stop", type=int, default=12)
-    parser.add_argument("--k", type=int, default=50) # k in kNN
+    parser.add_argument("--k", type=int, default=50) # k in KNN
 
-    # kg arguments
-    parser.add_argument("--segments", type=int, default=8) # yelp 4
+    # Knowledge Graph (KG) Arguments
+    parser.add_argument("--segments", type=int, default=8) # Note: For Yelp, use 4
     parser.add_argument("--kg", action="store_true")
-    parser.add_argument("--entity_num_per_poi", type=int, default=2) # yelp 13
+    parser.add_argument("--entity_num_per_poi", type=int, default=2) # Note: For Yelp, use 13
     parser.add_argument("--train_trans", action="store_true")
     parser.add_argument('--trans', type=str, default="seek")
     parser.add_argument("--contrast", action="store_true")
@@ -77,29 +78,38 @@ def main():
     parser.add_argument("--ui_p_drop", type=float, default=0.1)
     parser.add_argument("--tau", type=float, default=0.2)
 
-    # crf arguments
+    # Conditional Random Field (CRF) Arguments
     parser.add_argument("--crf", action="store_true")
     parser.add_argument("--crf_layer", type=int, default=1)
     parser.add_argument("--alpha", type=float, default=1)
     parser.add_argument("--beta", type=float, default=1)
 
-    # infer arguments
+    # Inference Arguments
     parser.add_argument("--dc", action="store_true")
     parser.add_argument("--infer", action="store_true")
     parser.add_argument("--dm", action="store_true")
     parser.add_argument("--pop_path", type=str, default='../Foursquare/poi_pop.pkl')
     parser.add_argument("--pop_coeff", type=float, default=1.0)
 
+    # Parsing command-line arguments
     args = parser.parse_args()
     set_seeds(args.seed)
     args.save_path = os.path.join(args.save_path, args.name)
     path_exist(args.save_path)
 
+    # Initializing a Logger instance for recording various metrics during the training process
+    # args.log_path: Path where the log file is saved
+    # args.name: Name of the model, used in the log
+    # args.seed: Random seed value, also recorded in the log
+    # args.log: A boolean value indicating whether to output logs to the console
     logger = Logger(args.log_path, args.name, args.seed, args.log)
     logger.log(str(args))
     logger.log("Experiment name: %s" % args.name)
 
+    # Loading the travel dataset with parameters and data paths specified in args
     data = TravelDataset(args, args.ori_data, args.dst_data, args.trans_data)
+
+    # Checking if the knowledge graph (KG) option is enabled and loading KG data accordingly
     if args.kg:
         kg_data = KGDataset(args)
     else:
@@ -117,6 +127,7 @@ def main():
 
     model = model.to(args.device)
 
+    # Training or testing the model based on the mode specified in args
     if args.mode == 'train':
         best = train_single_phase(model, train_loader, valid_loader, args, logger, kg_data)
 

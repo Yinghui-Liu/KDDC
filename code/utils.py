@@ -19,6 +19,9 @@ def _L2_loss_mean(x):
     return torch.mean(torch.sum(torch.pow(x, 2), dim=1, keepdim=False) / 2.)
 
 def set_seeds(seed):
+    """
+    Sets the seed for various random number generators to ensure reproducibility across runs.
+    """
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -32,14 +35,35 @@ def set_seeds(seed):
     # dgl.seed(seed)
 
 class Device(object):
+    """
+    A simple wrapper class for handling device (CPU/GPU) operations in PyTorch.
+    Attributes:
+        dv_name: The name of the device (e.g., 'cuda:0' for GPU, 'cpu' for CPU).
+    """
     def __init__(self, device_name):
+        """
+        Initializes the Device class with a specified device name.
+        """
         self.dv_name = device_name
     
     def transfer(self, x):
+        """
+        Transfers a given tensor to the specified device.
+        This is useful in PyTorch when working with models and tensors to ensure
+        that they are on the correct device (CPU or GPU) for computation
+        Returns:
+            The tensor transferred to the specified device.
+        """
         x.to(self.dv_name)
 
 def save_model(model, i, save_dir, optimizer=None, scheduler=None):
-    """ save current model """
+    """
+    Saves the current model state along with its optimizer and scheduler states.
+    The function checks if both an optimizer and a scheduler are provided.
+    If they are, it saves the model state, optimizer state, and scheduler state together.
+    If not, it only saves the model state. The saved file is named 'model_{i}.xhr',
+    where {i} is replaced by the provided identifier.
+    """
     if optimizer is not None and scheduler is not None:
         torch.save({
             "state_dict":model.state_dict(),
@@ -52,11 +76,24 @@ def save_model(model, i, save_dir, optimizer=None, scheduler=None):
             }, os.path.join(save_dir, 'model_{}.xhr'.format(i)))
 
 def path_exist(path):
+    """
+    Checks if a directory exists, and if not, creates it.
+    This function first checks if the directory specified by 'path' exists.
+    If the directory does not exist, it creates the directory along with any
+    necessary intermediate directories.
+    """
     folder = os.path.exists(path)
     if not folder:
         os.makedirs(path)
 
 def filt_params(named_params, filt_key):
+    """
+    Filters parameters based on a specified key.
+    Returns:
+        list
+    This function iterates through 'named_params', filtering out and returning
+    only those parameters whose names contain the specified 'filt_key'.
+    """
     filted = []
     for name, par in named_params:
         if filt_key in name:
@@ -64,10 +101,27 @@ def filt_params(named_params, filt_key):
     return filted
 
 def delete_models(epochs, base_path):
+    """
+    Deletes model files corresponding to specific training epochs.
+    For each epoch number in 'epochs', this function constructs the file name of
+    the corresponding saved model and deletes it from the file system.
+    """
     for e in epochs:
         os.remove(os.path.join(base_path, "model_{}.xhr".format(e)))
 
 class Logger(object):
+    """
+    Logger class for recording training processes and results.
+
+    This class provides functionalities for logging messages both to the console
+    and to a file, with time stamps included for each entry. It's useful for
+    tracking the progress and results of machine learning experiments.
+
+    Attributes:
+        log_file: A file object for writing logs to a file.
+        is_write_file (bool): Determines whether to write logs to a file.
+    """
+
     def __init__(self, log_path, name, seed, is_write_file=True):
         cur_time = time.strftime("%m-%d-%H:%M", time.localtime())
         self.is_write_file = is_write_file
@@ -75,17 +129,31 @@ class Logger(object):
             self.log_file = open(os.path.join(log_path, "%s %s(%d).log" % (cur_time, name, seed)), 'w')
     
     def log(self, log_str):
-        out_str = "[%s] " % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + log_str
+        """
+        Logs a given string with a time stamp.
+        """
+        out_str = f"[{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}] {log_str}"
         print(out_str)
         if self.is_write_file:
             self.log_file.write(out_str+'\n')
             self.log_file.flush()
     
     def close_log(self):
+        """
+        Closes the log file if file logging is enabled.
+        """
         if self.is_write_file:
             self.log_file.close()
 
 def checkin_graph_struct(o_ck):
+    """
+    Constructs graph structures from check-in sequences.
+    Returns:
+        tuple
+    This function processes check-in sequences to create graph structures for each sequence.
+    It constructs adjacency matrices representing the connections between nodes in the sequences,
+    normalizes these matrices, and prepares alias tensors for indexing.
+    """
     inputs = o_ck.cpu().numpy()
     items, n_node, A, alias_inputs = [], [], [], []
     for u_input in inputs:
@@ -117,10 +185,23 @@ def checkin_graph_struct(o_ck):
     return alias, A, items
 
 def cuda():
+    """
+    Checks if CUDA is available for PyTorch operations.
+    Returns:
+        bool
+    This function is a utility to quickly check the availability of CUDA, which is used for GPU-based computations.
+    """
     return torch.cuda.is_available()
     #return False
 
 def eval_sampling(region_poi, batch_size, device, duplicate=False, k=10):
+    """
+    Samples Points of Interest (POIs) and their corresponding regions for evaluation.
+    Returns:
+        tuple
+    If 'duplicate' is False, it samples 'k' distinct POIs for each region, for each batch.
+    If 'duplicate' is True, it samples 'k' POIs once per region and duplicates this sample across the batch.
+    """
     if not duplicate:
         poi_samples, region_samples = [], []
         for r, v in region_poi.items():
@@ -142,6 +223,13 @@ def eval_sampling(region_poi, batch_size, device, duplicate=False, k=10):
         return poi_samples, region_samples
 
 def collate_fn(batch):
+    """
+    Custom collation function for batching data in a DataLoader.
+    This function is used to process a batch of data items and ensure they are in a consistent format,
+    suitable for model training or evaluation.
+    Returns:
+        tuple
+    """
     uid, ori_ck, dst_ck, ori_rg, dst_rg = zip(*batch)
     
     pad_ori_ck = pad_sequence(ori_ck, batch_first=True)
@@ -163,7 +251,14 @@ def normalize_gat(mx):
     return mx.dot(r_mat_inv_sqrt).transpose().dot(r_mat_inv_sqrt)
 
 def sparse_mx_to_torch_sparse_tensor(sparse_mx):
-    """Convert a scipy sparse matrix to a torch sparse tensor."""
+    """
+    Converts a scipy sparse matrix to a PyTorch sparse tensor.
+    Returns:
+        torch.sparse.FloatTensor
+    This function transforms a scipy sparse matrix into a PyTorch sparse tensor.
+    It is useful for using scipy-based sparse data structures in PyTorch models,
+    particularly in graph-based neural networks.
+    """
     sparse_mx = sparse_mx.tocoo().astype(np.float32)
     indices = torch.from_numpy(
         np.vstack((sparse_mx.row, sparse_mx.col)).astype(np.int64))
@@ -174,11 +269,27 @@ def sparse_mx_to_torch_sparse_tensor(sparse_mx):
     return ret
 
 def read_graph(dir_path):
+    """
+    Reads graph data from files and returns the adjacency matrices.
+    Returns:
+        tuple
+    This function reads the adjacency matrices of the POI-POI graph and the Region-POI graph
+    from the specified directory. These matrices are typically used in graph-based recommender
+    systems or similar applications.
+    """
     poi_poi_graph = sp.load_npz(os.path.join(dir_path, 'poi_poi_graph_ada.npz'))
     region_poi_graph = sp.load_npz(os.path.join(dir_path, 'region_poi_graph.npz'))
     return poi_poi_graph, region_poi_graph
 
 def subgraph(adj, select_indice, n_poi, n_region):
+    """
+    Extracts a subgraph from the given adjacency matrix.
+    Returns:
+        torch.Tensor
+    This function creates a subgraph by selecting rows and columns from the full
+    adjacency matrix corresponding to the given indices. It is useful in graph-based models
+    where a smaller portion of the graph is required for specific computations.
+    """
     select_indice = select_indice.tolist()
 
     col_indice = [select_indice]
@@ -191,6 +302,13 @@ def subgraph(adj, select_indice, n_poi, n_region):
     return sub_adj.to_dense()
 
 def convert_sp_mat_to_sp_tensor(X):
+    """
+    Converts a scipy sparse matrix to a PyTorch sparse tensor.
+    Returns:
+        torch.sparse.FloatTensor
+    This function is useful for converting scipy-based sparse data structures into
+    PyTorch sparse tensors, enabling their use in PyTorch models.
+    """
     coo = X.tocoo()
     i = torch.LongTensor([coo.row, coo.col])
     v = torch.from_numpy(coo.data).float()
