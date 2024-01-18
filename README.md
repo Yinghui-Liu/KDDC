@@ -20,13 +20,5 @@ We have released the travel behavior dataset Foursquare and Yelp which are gener
 Simply run the following command to train and evaluate:
 ```
 cd ./code
-python main.py --ori_data {...} --dst_data {...} --trans_data {...} --pp_graph_path {...} ---save_path {...} --mode train --crf --memory --trans transd
+python main.py --ori_data {...} --dst_data {...} --trans_data {...} --pp_graph_path {...} ---save_path {...} --kg --train_trans --contrast --crf --dc --infer --dm
 ```
-
-todo modify the 
-
-把图片中store_false全都变成store_true，并添加到command line 
-
-![image-20240118162119407](README.assets/image-20240118162119407.png)
-
-seed 尝试替换结果好一些的
