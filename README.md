@@ -18,7 +18,7 @@ We have released the travel behavior dataset Foursquare and Yelp which are gener
 ## Run Our Model
 
 Simply run the following command to train and evaluate:
-```
+```cmd
 cd ./code
-python main.py --ori_data {...} --dst_data {...} --trans_data {...} --pp_graph_path {...} ---save_path {...} --kg --train_trans --contrast --crf --dc --infer --dm
+python main.py --ori_data {...} --dst_data {...} --trans_data {...} --pp_graph_path {...} ---save_path {...} --mode train --kg --train_trans --dc --infer --dm
 ```
