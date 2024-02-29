@@ -57,7 +57,6 @@ class CRFLayer(nn.Module):
         """
         Defines how messages are passed between nodes during the graph update.
         It uses the transformed node features and the computed attention weights.
-        message UDF for equation (3) & (4)
         Returns:
             dict
         """
@@ -157,9 +156,6 @@ class CRF(nn.Module):
         
 
 class KDDC(nn.Module):
-    """
-    KDDC (Knowledge-Driven Disentangled Causal) is a neural network model for processing travel data with knowledge graphs.
-    """
     def __init__(self, args, n_poi, n_region, region_poi, pp_adj, kg_dataset=None):
         super().__init__()
         self.args = args
@@ -311,7 +307,6 @@ class KDDC(nn.Module):
         Returns:
             loss
         """
-        # (kg_batch_size, relation_dim) There are a total of 44 relation types, each corresponding to a 64-dimensional embedding vector.
         # Each sample corresponds to an index of a relation type, and embedding_relation converts the index of each relation type into the corresponding embedding vector.
         r_embed = self.relations_embedding(r)
         h_embed = self.poi_embedding(h) # (kg_batch_size, entity_dim)
@@ -365,7 +360,6 @@ class KDDC(nn.Module):
         Returns:
             loss
         """
-        # The 44 here indicates that there are a total of 44 types of relations, each corresponding to a 64-dimensional embedding vector.
         # Each sample corresponds to an index of a relation type, and the embedding_relation converts the index of each relation type into the corresponding embedding vector.
         r_embed = self.relations_embedding(r)        # (kg_batch_size, relation_dim)
         h_embed = self.poi_embedding(h)               # (kg_batch_size, entity_dim)
@@ -883,6 +877,5 @@ class KDDC(nn.Module):
         else:
             o_emb = self._avg_pooling(o_ck, o_items_emb)  # b x h
             fusion_emb = o_emb
-        # (32, 113) The first 13 are positive samples, and the last 100 are negative samples.
         score, alias_poi = self._evaluate(fusion_emb, d_ck, d_rg, o_rg, region_repr, poi_repr, eval_p, subgraph_alias)
         return score, alias_poi
