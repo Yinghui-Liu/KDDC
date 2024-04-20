@@ -1,8 +1,9 @@
 # KDDC
 
-This is the official implementation of our paper: **KDDC: Knowledge-Driven Disentangled Causal Metric Learning for Pre-Travel Out-of-Town Recommendation**.
+This is the official implementation of our paper titled **"KDDC: Knowledge-Driven Disentangled Causal Metric Learning for Pre-Travel Out-of-Town Recommendation"**, which has been accepted by the IJCAI 2024 conference.
 
 Pytorch versions are provided.
+
 > Pytorch: https://pytorch.org
 
 ## Data
