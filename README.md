@@ -23,3 +23,18 @@ Simply run the following command to train and evaluate:
 cd ./code
 python main.py --ori_data {...} --dst_data {...} --trans_data {...} --pp_graph_path {...} ---save_path {...} --mode train --kg --train_trans --dc --infer --dm
 ```
+
+## Citation
+
+If you find this work helpful, please cite our paper:
+
+### BibTeX
+
+```bibtex
+@inproceedings{liu2024kddc,
+  title={KDDC: Knowledge-driven disentangled causal metric learning for pre-travel out-of-town recommendation},
+  author={Liu, Yinghui and Shen, Guojiang and Cui, Chengyong and Zhao, Zhenzhen and Han, Xiao and Du, Jiaxin and Zhao, Xiangyu and Kong, Xiangjie},
+  booktitle={Proceedings of the Thirty-Third International Joint Conference on Artificial Intelligence, Jeju Island, Republic of Korea},
+  pages={4--9},
+  year={2024}
+}
